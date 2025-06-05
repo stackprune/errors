@@ -1,0 +1,50 @@
+{
+  "name": "stackprune/errors",
+  "dockerComposeFile": ["compose.yml"],
+  "service": "workspace",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      // cSpell: disable
+      "settings": {
+        "cSpell.words": [
+          //package names
+          "stackprune",
+          "stretchr",
+
+          // linters
+          "depguard",
+          "exhaustruct",
+          "golines",
+          "nolint",
+          "varnamelen",
+
+          // others
+          "errorf",
+          "stderrors",
+          "uintptr",
+          "uncomparable",
+          "wrapf",
+          "messagef"
+        ],
+        "go.formatTool": "custom",
+        "go.alternateTools": {
+          "customFormatter": "golangci-lint-v2"
+        },
+        "go.formatFlags": [
+          "fmt",
+          "--stdin"
+        ],
+        "go.lintFlags": [
+          "--path-mode=abs",
+          "--fast-only"
+        ],
+        "go.lintTool": "golangci-lint-v2"
+      },
+      "extensions": [
+        "golang.go",
+        "streetsidesoftware.code-spell-checker"
+      ]
+    }
+  }
+}
