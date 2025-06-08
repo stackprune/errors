@@ -7,7 +7,6 @@ package errors
 import (
 	"fmt"
 	"io"
-	"slices"
 	"strings"
 )
 
@@ -84,10 +83,7 @@ func (e *Error) Stacks() []Stack {
 			continue
 		}
 
-		if slices.Contains(
-			[]string{"runtime.main", "testing.goexit", "runtime.runExample"},
-			stack.FuncName,
-		) {
+		if strings.HasPrefix(stack.FuncName, "runtime.") || stack.FuncName == "testing.runExample" {
 			break
 		}
 
