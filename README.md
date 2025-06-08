@@ -129,13 +129,13 @@ Output:
 
 ```
 user creation failed: failed to insert user into database
-github.com/stackprune/errors_test.repository_insertUser
+main.repositoryInsertUser
     /app/main.go:133
-github.com/stackprune/errors_test.usecase_createUser
+main.usecaseCreateUser
     /app/main.go:125
-github.com/stackprune/errors_test.handler_createUser
+main.handleCreateUser
     /app/main.go:117
-github.com/stackprune/errors_test.ExampleError_Format_stackTrace
+main.main
     /app/main.go:139
 ```
 
