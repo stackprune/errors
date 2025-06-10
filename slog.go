@@ -68,13 +68,6 @@ func (e *Error) LogValue() slog.Value {
 	stackItems := make([]any, 0, len(stackFrames))
 
 	switch logOptions.StackFormat {
-	case StackFormatStringArray:
-		for _, frame := range stackFrames {
-			stackItems = append(
-				stackItems,
-				frame.FuncName+" at "+frame.File+":"+strconv.Itoa(frame.LineNumber),
-			)
-		}
 	case StackFormatObjectArray:
 		for _, frame := range stackFrames {
 			stackItems = append(stackItems, map[string]any{
@@ -82,6 +75,15 @@ func (e *Error) LogValue() slog.Value {
 				"file":     frame.File,
 				"line":     frame.LineNumber,
 			})
+		}
+	case StackFormatStringArray:
+		fallthrough // fall back to default for legacy and unknown formats
+	default:
+		for _, frame := range stackFrames {
+			stackItems = append(
+				stackItems,
+				frame.FuncName+" at "+frame.File+":"+strconv.Itoa(frame.LineNumber),
+			)
 		}
 	}
 
