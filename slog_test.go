@@ -2,6 +2,7 @@ package errors_test
 
 import (
 	"io"
+	"sync"
 	"testing"
 
 	"github.com/stackprune/errors"
@@ -9,8 +10,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//nolint:gochecknoglobals
+var logOptionsMu sync.Mutex
+
 func TestSetLogOptions(t *testing.T) {
 	t.Parallel()
+
+	logOptionsMu.Lock()
+	defer logOptionsMu.Unlock()
 
 	// Save original options to restore later
 	defaultOptions := errors.GetLogOptions()
@@ -130,6 +137,9 @@ func TestError_LogValue(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
+			logOptionsMu.Lock()
+			defer logOptionsMu.Unlock()
 
 			// Set stack format
 			defaultOptions := errors.GetLogOptions()
