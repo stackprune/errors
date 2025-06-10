@@ -4,6 +4,8 @@ import (
 	stderrors "errors"
 	"fmt"
 	"io"
+	"log/slog"
+	"os"
 
 	"github.com/stackprune/errors"
 )
@@ -166,4 +168,29 @@ func ExampleWrap_networkError() {
 	fmt.Println(serviceErr.Error())
 
 	// Output: failed to fetch data from api.example.com: network connection lost: unexpected EOF
+}
+
+// Example_slogStructuredLogging demonstrates how to use slog for structured logging
+//
+//nolint:testableexamples
+func Example_slogStructuredLogging() {
+	err := errors.WithStack(errors.New("missing config"))
+
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger.Error("initialization failed", slog.Any("error", err))
+
+	// Example output:
+	// {
+	//   "time": "2025-06-10T10:01:44.693101023+09:00",
+	//   "level": "ERROR",
+	//   "msg": "initialization failed",
+	//   "error": {
+	//     "message": "missing config",
+	//     "kind": "*errors.Error",
+	//     "stack": [
+	//       "loadConfig at config.go:42",
+	//       "main at main.go:10"
+	//     ]
+	//   }
+	// }
 }

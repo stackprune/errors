@@ -46,7 +46,7 @@ go get github.com/stackprune/errors
 ## Core API Comparison
 
 | Function      | stackprune/errors                           | pkg/errors                 |
-|---------------|---------------------------------------------|----------------------------|
+| ------------- | ------------------------------------------- | -------------------------- |
 | `New()`       | Captures stack once                         | Captures stack             |
 | `Wrap()`      | Adds message, no new stack                  | Adds message + stack       |
 | `WithStack()` | Adds stack if missing                       | Always adds stack          |
@@ -114,6 +114,65 @@ fmt.Printf("%+v\n", err) // shows full stack from the point where error was crea
 * This library requires **Go 1.22+**. Older versions are not supported or tested.
 * `Join` provides the same semantics as Go 1.20's `errors.Join`, with internal fallback for compatibility.
 * Stack traces are only captured once — even when wrapping multiple times — keeping logs concise.
+
+---
+
+## Structured Logging with `slog`
+
+This library integrates with the [`slog`](https://pkg.go.dev/log/slog) package to enable structured logging of rich error data, including stack traces.
+
+### Enabling `slog.LogValuer`
+
+The `*Error` type implements `slog.LogValuer`. When passed to a `slog.Logger`, it emits a structured object including the error message and optionally the stack trace.
+
+```go
+err := errors.WithStack(errors.New("failed to open config"))
+logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+logger.Error("operation failed", slog.Any("error", err))
+```
+
+#### Output (default format):
+
+```json
+{
+  "time": "2025-06-10T09:55:08.038826176+09:00",
+  "level": "ERROR",
+  "msg": "operation failed",
+  "error": {
+    "message": "failed to open config",
+    "kind": "*errors.Error",
+    "stack": [
+      "openConfig at project/config.go:42",
+      "main at project/main.go:10"
+    ]
+  }
+}
+```
+
+### Customizing Stack Trace Format
+
+You can control how stack traces are serialized using the `SetStackFormatter` function:
+
+```go
+errors.SetStackFormatter(errors.StackAsObjects)
+```
+
+Result:
+
+```json
+"stack": [
+  {
+    "func": "openConfig",
+    "file": "config.go",
+    "line": 42
+  },
+  {
+    "func": "main",
+    "file": "main.go",
+    "line": 10
+  }
+]
+```
 
 ---
 
