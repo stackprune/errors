@@ -13,7 +13,7 @@ import (
 // Error represents an error with optional stack trace and cause. Implements standard interfaces.
 type Error struct {
 	err             error     // wrapped error
-	message         string    // error message
+	message         string    // contextual message for wrapping, not the final error string
 	programCounters []uintptr // program counters for stack trace
 	cachedStacks    []Stack   // cached stack traces to avoid recomputing
 }
