@@ -4,7 +4,6 @@
 package errors
 
 import (
-	"errors"
 	"log/slog"
 	"reflect"
 	"strconv"
@@ -89,7 +88,7 @@ func (e *Error) LogValue() slog.Value {
 	rootErr := error(e)
 
 	for {
-		unwrapped := errors.Unwrap(rootErr)
+		unwrapped := Unwrap(rootErr)
 		if unwrapped == nil {
 			break
 		}
