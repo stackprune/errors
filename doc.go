@@ -5,4 +5,6 @@
 //
 // The API includes `New`, `Wrap`, `Errorf`, `WithStack`, and `Join`, offering
 // familiar ergonomics without the noise of `WithMessage` or similar.
+//
+// The *Error type also implements slog.LogValuer for structured logging.
 package errors
