@@ -170,6 +170,9 @@ func ExampleWrap_networkError() {
 	// Output: failed to fetch data from api.example.com: network connection lost: unexpected EOF
 }
 
+// Example_slogStructuredLogging demonstrates how to use slog for structured logging
+//
+//nolint:testableexamples
 func Example_slogStructuredLogging() {
 	err := errors.WithStack(errors.New("missing config"))
 
