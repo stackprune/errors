@@ -117,11 +117,39 @@ fmt.Printf("%+v\n", err) // shows full stack from the point where error was crea
 
 ---
 
+## Example Output
+
+```go
+if err := handler_createUser(); err != nil {
+    fmt.Printf("%+v\n", err)
+}
+```
+
+Output:
+
+```
+user creation failed: failed to insert user into database
+main.repositoryInsertUser
+    /app/main.go:133
+main.usecaseCreateUser
+    /app/main.go:125
+main.handleCreateUser
+    /app/main.go:117
+main.main
+    /app/main.go:139
+```
+
+✔ Stack trace shown once  
+✔ No duplication  
+✔ Easy to follow
+
+---
+
 ## Structured Logging with `slog`
 
 This library integrates with the [`slog`](https://pkg.go.dev/log/slog) package to enable structured logging of rich error data, including stack traces.
 
-### Enabling `slog.LogValuer`
+### Basic `slog` Integration
 
 The `*Error` type implements `slog.LogValuer`. When passed to a `slog.Logger`, it emits a structured object including the error message and optionally the stack trace.
 
@@ -151,10 +179,12 @@ logger.Error("operation failed", slog.Any("error", err))
 
 ### Customizing Stack Trace Format
 
-You can control how stack traces are serialized using the `SetStackFormatter` function:
+You can control how stack traces are serialized using the `SetLogOptions` function:
 
 ```go
-errors.SetStackFormatter(errors.StackAsObjects)
+errors.SetLogOptions(errors.LogOptions{
+    StackFormat: errors.StackFormatObjectArray,
+})
 ```
 
 Result:
@@ -162,45 +192,17 @@ Result:
 ```json
 "stack": [
   {
-    "func": "openConfig",
     "file": "config.go",
+    "function": "openConfig",
     "line": 42
   },
   {
-    "func": "main",
     "file": "main.go",
+    "function": "main",
     "line": 10
   }
 ]
 ```
-
----
-
-## Example Output
-
-```go
-if err := handler_createUser(); err != nil {
-    fmt.Printf("%+v\n", err)
-}
-```
-
-Output:
-
-```
-user creation failed: failed to insert user into database
-main.repositoryInsertUser
-    /app/main.go:133
-main.usecaseCreateUser
-    /app/main.go:125
-main.handleCreateUser
-    /app/main.go:117
-main.main
-    /app/main.go:139
-```
-
-✔ Stack trace shown once  
-✔ No duplication  
-✔ Easy to follow
 
 ---
 

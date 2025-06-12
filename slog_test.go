@@ -2,7 +2,6 @@ package errors_test
 
 import (
 	"io"
-	"sync"
 	"testing"
 
 	"github.com/stackprune/errors"
@@ -10,15 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//nolint:gochecknoglobals
-var logOptionsMu sync.Mutex
-
+//nolint:paralleltest
 func TestSetLogOptions(t *testing.T) {
-	t.Parallel()
-
-	logOptionsMu.Lock()
-	defer logOptionsMu.Unlock()
-
 	// Save original options to restore later
 	defaultOptions := errors.GetLogOptions()
 
@@ -41,9 +33,108 @@ func TestSetLogOptions(t *testing.T) {
 	assert.Equal(t, customOptions, currentOptions)
 }
 
-func TestError_LogValue(t *testing.T) {
-	t.Parallel()
+//nolint:paralleltest
+func TestSetLogOptions_DefaultHandling(t *testing.T) {
+	defaultOptions := errors.GetLogOptions()
 
+	t.Cleanup(func() {
+		errors.SetLogOptions(defaultOptions)
+	})
+
+	tests := []struct {
+		name  string
+		input errors.LogOptions
+		want  errors.LogOptions
+	}{
+		{
+			name: "empty MessageKey uses default",
+			input: errors.LogOptions{
+				MessageKey:  "", // empty
+				KindKey:     "custom_kind",
+				StackKey:    "custom_stack",
+				StackFormat: errors.StackFormatObjectArray,
+			},
+			want: errors.LogOptions{
+				MessageKey:  "message", // default
+				KindKey:     "custom_kind",
+				StackKey:    "custom_stack",
+				StackFormat: errors.StackFormatObjectArray,
+			},
+		},
+		{
+			name: "empty KindKey uses default",
+			input: errors.LogOptions{
+				MessageKey:  "custom_message",
+				KindKey:     "", // empty
+				StackKey:    "custom_stack",
+				StackFormat: errors.StackFormatObjectArray,
+			},
+			want: errors.LogOptions{
+				MessageKey:  "custom_message",
+				KindKey:     "kind", // default
+				StackKey:    "custom_stack",
+				StackFormat: errors.StackFormatObjectArray,
+			},
+		},
+		{
+			name: "empty StackKey uses default",
+			input: errors.LogOptions{
+				MessageKey:  "custom_message",
+				KindKey:     "custom_kind",
+				StackKey:    "", // empty
+				StackFormat: errors.StackFormatObjectArray,
+			},
+			want: errors.LogOptions{
+				MessageKey:  "custom_message",
+				KindKey:     "custom_kind",
+				StackKey:    "stack", // default
+				StackFormat: errors.StackFormatObjectArray,
+			},
+		},
+		{
+			name: "all empty keys use defaults",
+			input: errors.LogOptions{
+				MessageKey:  "", // empty
+				KindKey:     "", // empty
+				StackKey:    "", // empty
+				StackFormat: errors.StackFormatObjectArray,
+			},
+			want: errors.LogOptions{
+				MessageKey:  "message", // default
+				KindKey:     "kind",    // default
+				StackKey:    "stack",   // default
+				StackFormat: errors.StackFormatObjectArray,
+			},
+		},
+		{
+			name: "non-empty keys preserved",
+			input: errors.LogOptions{
+				MessageKey:  "error_msg",
+				KindKey:     "error_kind",
+				StackKey:    "error_stack",
+				StackFormat: errors.StackFormatStringArray,
+			},
+			want: errors.LogOptions{
+				MessageKey:  "error_msg",
+				KindKey:     "error_kind",
+				StackKey:    "error_stack",
+				StackFormat: errors.StackFormatStringArray,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			errors.SetLogOptions(tt.input)
+			got := errors.GetLogOptions()
+
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+//nolint:paralleltest
+func TestError_LogValue(t *testing.T) {
 	tests := []struct {
 		name        string
 		err         error
@@ -136,11 +227,6 @@ func TestError_LogValue(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			logOptionsMu.Lock()
-			defer logOptionsMu.Unlock()
-
 			// Set stack format
 			defaultOptions := errors.GetLogOptions()
 
