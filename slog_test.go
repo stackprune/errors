@@ -2,7 +2,6 @@ package errors_test
 
 import (
 	"io"
-	"sync"
 	"testing"
 
 	"github.com/stackprune/errors"
@@ -10,15 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//nolint:gochecknoglobals
-var logOptionsMu sync.Mutex
-
+//nolint:paralleltest
 func TestSetLogOptions(t *testing.T) {
-	t.Parallel()
-
-	logOptionsMu.Lock()
-	defer logOptionsMu.Unlock()
-
 	// Save original options to restore later
 	defaultOptions := errors.GetLogOptions()
 
@@ -41,16 +33,10 @@ func TestSetLogOptions(t *testing.T) {
 	assert.Equal(t, customOptions, currentOptions)
 }
 
+//nolint:paralleltest
 func TestSetLogOptions_DefaultHandling(t *testing.T) {
-	t.Parallel()
-
-	logOptionsMu.Lock()
-	defer logOptionsMu.Unlock()
-
-	// Save original options to restore later
 	defaultOptions := errors.GetLogOptions()
 
-	// Restore original options after test
 	t.Cleanup(func() {
 		errors.SetLogOptions(defaultOptions)
 	})
@@ -139,8 +125,6 @@ func TestSetLogOptions_DefaultHandling(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
 			errors.SetLogOptions(tt.input)
 			got := errors.GetLogOptions()
 
@@ -149,9 +133,8 @@ func TestSetLogOptions_DefaultHandling(t *testing.T) {
 	}
 }
 
+//nolint:paralleltest
 func TestError_LogValue(t *testing.T) {
-	t.Parallel()
-
 	tests := []struct {
 		name        string
 		err         error
@@ -244,11 +227,6 @@ func TestError_LogValue(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-
-			logOptionsMu.Lock()
-			defer logOptionsMu.Unlock()
-
 			// Set stack format
 			defaultOptions := errors.GetLogOptions()
 
