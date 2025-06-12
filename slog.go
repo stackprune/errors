@@ -21,6 +21,12 @@ const (
 	StackFormatObjectArray
 )
 
+const (
+	defaultMessageKey = "message"
+	defaultKindKey    = "kind"
+	defaultStackKey   = "stack"
+)
+
 // LogOptions defines how *Error values are serialized for slog structured logging.
 // It allows customization of key names and stack trace formatting.
 type LogOptions struct {
@@ -42,9 +48,9 @@ func GetLogOptions() LogOptions {
 	opt, ok := v.(LogOptions)
 	if !ok {
 		return LogOptions{
-			MessageKey:  "message",
-			KindKey:     "kind",
-			StackKey:    "stack",
+			MessageKey:  defaultMessageKey,
+			KindKey:     defaultKindKey,
+			StackKey:    defaultStackKey,
 			StackFormat: StackFormatStringArray,
 		}
 	}
@@ -55,8 +61,20 @@ func GetLogOptions() LogOptions {
 // SetLogOptions updates the global LogOptions used for logging *Error values with slog.
 // This affects all future calls to *Error.LogValue.
 // This function is safe for concurrent use.
-func SetLogOptions(o LogOptions) {
-	logOptionsValue.Store(o)
+func SetLogOptions(options LogOptions) {
+	if options.MessageKey == "" {
+		options.MessageKey = defaultMessageKey
+	}
+
+	if options.KindKey == "" {
+		options.KindKey = defaultKindKey
+	}
+
+	if options.StackKey == "" {
+		options.StackKey = defaultStackKey
+	}
+
+	logOptionsValue.Store(options)
 }
 
 // LogValue implements slog.LogValuer for *Error.
