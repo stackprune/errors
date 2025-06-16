@@ -194,3 +194,31 @@ func Example_slogStructuredLogging() {
 	//   }
 	// }
 }
+
+// ExampleRecoverError demonstrates error creation from panic recovery.
+//
+//nolint:testableexamples
+func ExampleRecoverError() {
+	safeFunc := func() (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = errors.RecoverError(fmt.Sprintf("database operation failed: %v", r))
+			}
+		}()
+
+		// This will panic
+		panic("connection timeout")
+	}
+
+	err := safeFunc()
+	fmt.Printf("%+v\n", err)
+
+	// Example Output:
+	// database operation failed: connection timeout
+	// runtime.gopanic
+	// 	/usr/local/go/src/runtime/panic.go:770
+	// github.com/stackprune/errors_test.ExampleRecoverError.func1
+	// 	/app/example_test.go:208
+	// github.com/stackprune/errors_test.ExampleRecoverError
+	// 	/app/example_test.go:211
+}

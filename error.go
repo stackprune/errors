@@ -7,6 +7,7 @@ package errors
 import (
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 )
 
@@ -68,6 +69,11 @@ func (e *Error) Format(state fmt.State, verb rune) {
 	}
 }
 
+// ProgramCounters returns the raw program counters (for testing).
+func (e *Error) ProgramCounters() []uintptr {
+	return e.programCounters
+}
+
 // Stacks returns the stack trace.
 func (e *Error) Stacks() []Stack {
 	if e.cachedStacks != nil {
@@ -83,7 +89,10 @@ func (e *Error) Stacks() []Stack {
 			continue
 		}
 
-		if strings.HasPrefix(stack.FuncName, "runtime.") || stack.FuncName == "testing.runExample" {
+		if slices.Contains(
+			[]string{"runtime.goexit", "runtime.main", "testing.runExample"},
+			stack.FuncName,
+		) {
 			break
 		}
 

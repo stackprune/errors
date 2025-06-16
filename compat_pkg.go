@@ -40,7 +40,7 @@ func wrapWithMessage(err error, message string) error {
 		programCounters = errorWithStack.programCounters
 		cachedStacks = errorWithStack.cachedStacks
 	} else {
-		programCounters = callers()
+		programCounters = callers(0)
 	}
 
 	return &Error{

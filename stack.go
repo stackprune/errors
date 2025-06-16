@@ -36,15 +36,16 @@ func NewStack(programCounter uintptr) Stack {
 }
 
 // callers captures the current stack trace.
-// It skips the first 3 frames to exclude internal function calls.
-func callers() []uintptr {
+// It skips the first 3 frames plus additional frames to exclude internal function calls.
+// The skip parameter allows callers to skip additional frames as needed.
+func callers(skip int) []uintptr {
 	const (
-		callersDepth = 32
-		skipDepth    = 3
+		callersDepth     = 32
+		defaultSkipDepth = 3
 	)
 
 	var pcs [callersDepth]uintptr
-	length := runtime.Callers(skipDepth, pcs[:])
+	length := runtime.Callers(defaultSkipDepth+skip, pcs[:])
 
 	return pcs[:length]
 }
