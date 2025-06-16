@@ -103,9 +103,9 @@ func TestWrap(t *testing.T) {
 			require.Equal(t, tt.want, got.Error())
 
 			// Check that stack trace is preserved/added
-			stackErr := &errors.Error{}
-			ok := stderrors.As(got, &stackErr)
-			assert.True(t, ok)
+			var stackErr *errors.Error
+
+			require.ErrorAs(t, got, &stackErr)
 			assert.NotEmpty(t, stackErr.Stacks())
 		})
 	}
@@ -174,9 +174,9 @@ func TestWrapf(t *testing.T) {
 			require.Equal(t, tt.want, got.Error())
 
 			// Check that stack trace is preserved/added
-			stackErr := &errors.Error{}
-			ok := stderrors.As(got, &stackErr)
-			require.True(t, ok)
+			var stackErr *errors.Error
+
+			require.ErrorAs(t, got, &stackErr)
 			assert.NotEmpty(t, stackErr.Stacks())
 		})
 	}

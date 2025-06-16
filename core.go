@@ -15,7 +15,18 @@ func New(message string) error {
 	return &Error{
 		err:             nil,
 		message:         message,
-		programCounters: callers(),
+		programCounters: callers(0),
+		cachedStacks:    nil,
+	}
+}
+
+// NewWithCallers creates an error with a message and provided program counters.
+// It allows attaching an external stack trace, e.g., from recover handlers.
+func NewWithCallers(message string, programCounters []uintptr) error {
+	return &Error{
+		err:             nil,
+		message:         message,
+		programCounters: programCounters,
 		cachedStacks:    nil,
 	}
 }
@@ -30,7 +41,7 @@ func Errorf(format string, args ...any) error {
 	return &Error{
 		err:             nil,
 		message:         fmt.Sprintf(format, args...),
-		programCounters: callers(),
+		programCounters: callers(0),
 		cachedStacks:    nil,
 	}
 }
@@ -38,6 +49,15 @@ func Errorf(format string, args ...any) error {
 // Is reports whether err is or wraps target, same as errors.Is.
 func Is(err, target error) bool {
 	return errors.Is(err, target)
+}
+
+// RecoverError creates an error with a message and stack trace.
+// This is a convenience function for defer/recover patterns where you want
+// to capture the current stack trace.
+func RecoverError(message string) error {
+	programCounters := callers(1)
+
+	return NewWithCallers(message, programCounters)
 }
 
 // Unwrap returns the result of calling the Unwrap method on err, if any.

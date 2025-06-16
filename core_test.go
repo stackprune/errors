@@ -6,6 +6,7 @@ import (
 
 	"github.com/stackprune/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNew(t *testing.T) {
@@ -42,6 +43,20 @@ func TestNew(t *testing.T) {
 			assert.Equal(t, tt.want.Error(), got)
 		})
 	}
+}
+
+func TestNewWithCallers(t *testing.T) {
+	t.Parallel()
+
+	var customErr *errors.Error
+
+	pcs := []uintptr{0x1234, 0x5678, 0x9abc}
+	err := errors.NewWithCallers("foo", pcs)
+
+	require.ErrorAs(t, err, &customErr)
+	programCounters := customErr.ProgramCounters()
+
+	assert.Equal(t, pcs, programCounters)
 }
 
 func TestAs(t *testing.T) {
@@ -197,6 +212,29 @@ func TestIs(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func TestRecoverError(t *testing.T) {
+	t.Parallel()
+
+	// Test typical recovery scenario
+	recoverFunc := func() (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = errors.RecoverError(fmt.Sprintf("panic recovered: %v", r))
+			}
+		}()
+
+		panic("something went wrong")
+	}
+
+	err := recoverFunc()
+	assert.Equal(t, "panic recovered: something went wrong", err.Error())
+
+	var stackErr *errors.Error
+
+	require.ErrorAs(t, err, &stackErr)
+	assert.NotEmpty(t, stackErr.Stacks())
 }
 
 func TestUnwrap(t *testing.T) {
