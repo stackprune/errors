@@ -116,29 +116,28 @@ func logErrorMap(err error, logOptions LogOptions) map[string]any {
 		logOptions.KindKey:    reflect.TypeOf(err).String(),
 	}
 
-	switch e := err.(type) {
-	case *Error:
-		result[logOptions.KindKey] = rootErrorKind(e)
-		result[logOptions.StackKey] = formatStackItems(e.Stacks(), logOptions.StackFormat)
-	case *JoinError:
-		items := make([]any, 0, len(e.errs))
+	var joinErr *JoinError
+	if As(err, &joinErr) {
+		items := make([]any, 0, len(joinErr.errs))
 
-		for _, child := range e.errs {
+		for _, child := range joinErr.errs {
 			if child != nil {
 				items = append(items, logErrorMap(child, logOptions))
 			}
 		}
 
 		result[defaultErrorsKey] = items
-	default:
-		var errorWithStack *Error
-		if As(err, &errorWithStack) {
-			result[logOptions.KindKey] = rootErrorKind(errorWithStack)
-			result[logOptions.StackKey] = formatStackItems(
-				errorWithStack.Stacks(),
-				logOptions.StackFormat,
-			)
-		}
+
+		return result
+	}
+
+	var errorWithStack *Error
+	if As(err, &errorWithStack) {
+		result[logOptions.KindKey] = rootErrorKind(errorWithStack)
+		result[logOptions.StackKey] = formatStackItems(
+			errorWithStack.Stacks(),
+			logOptions.StackFormat,
+		)
 	}
 
 	return result

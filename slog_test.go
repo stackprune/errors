@@ -292,6 +292,7 @@ func TestJoinError_LogValue(t *testing.T) {
 	joinedErr := errors.Join(err1, err2)
 
 	var joinErr *errors.JoinError
+
 	require.ErrorAs(t, joinedErr, &joinErr)
 
 	group := joinErr.LogValue().Group()
@@ -318,6 +319,7 @@ func stackStrings(t *testing.T, err error) []any {
 	t.Helper()
 
 	var stackErr *errors.Error
+
 	require.ErrorAs(t, err, &stackErr)
 
 	stackItems := make([]any, 0, len(stackErr.Stacks()))
