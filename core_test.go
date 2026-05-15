@@ -24,8 +24,8 @@ func TestNew(t *testing.T) {
 		},
 		{
 			name:    "simple message",
-			message: "foo",
-			want:    errors.New("foo"),
+			message: testMessageFoo,
+			want:    errors.New(testMessageFoo),
 		},
 		{
 			name:    "message with format specifiers",
@@ -51,7 +51,7 @@ func TestNewWithCallers(t *testing.T) {
 	var customErr *errors.Error
 
 	pcs := []uintptr{0x1234, 0x5678, 0x9abc}
-	err := errors.NewWithCallers("foo", pcs)
+	err := errors.NewWithCallers(testMessageFoo, pcs)
 
 	require.ErrorAs(t, err, &customErr)
 	programCounters := customErr.ProgramCounters()
@@ -71,20 +71,20 @@ func TestAs(t *testing.T) {
 		want   bool
 	}{
 		{
-			name:   "nil error",
+			name:   testNameNilError,
 			err:    nil,
 			target: &testErr,
 			want:   false,
 		},
 		{
-			name:   "with stack",
+			name:   testNameWithStack,
 			err:    errors.WithStack(testErr),
 			target: &testErr,
 			want:   true,
 		},
 		{
-			name:   "with wrap",
-			err:    errors.Wrap(testErr, "wrapped error"),
+			name:   testNameWithWrap,
+			err:    errors.Wrap(testErr, testMessageWrappedError),
 			target: &testErr,
 			want:   true,
 		},
@@ -126,13 +126,13 @@ func TestErrorf(t *testing.T) {
 	}{
 		{
 			name:    "simple message",
-			message: "foo",
-			want:    "foo",
+			message: testMessageFoo,
+			want:    testMessageFoo,
 		},
 		{
 			name:    "message with format specifiers",
 			message: "with format specifier, %s %d",
-			args:    []any{"foo", 1},
+			args:    []any{testMessageFoo, 1},
 			want:    "with format specifier, foo 1",
 		},
 	}
@@ -166,7 +166,7 @@ func TestIs(t *testing.T) {
 			want:   true,
 		},
 		{
-			name:   "nil error",
+			name:   testNameNilError,
 			err:    nil,
 			target: testErr,
 			want:   false,
@@ -184,14 +184,14 @@ func TestIs(t *testing.T) {
 			want:   false,
 		},
 		{
-			name:   "with stack",
+			name:   testNameWithStack,
 			err:    errors.WithStack(testErr),
 			target: testErr,
 			want:   true,
 		},
 		{
-			name:   "with wrap",
-			err:    errors.Wrap(testErr, "wrapped error"),
+			name:   testNameWithWrap,
+			err:    errors.Wrap(testErr, testMessageWrappedError),
 			target: testErr,
 			want:   true,
 		},
@@ -248,7 +248,7 @@ func TestUnwrap(t *testing.T) {
 		want error
 	}{
 		{
-			name: "nil error",
+			name: testNameNilError,
 			err:  nil,
 			want: nil,
 		},
@@ -263,13 +263,13 @@ func TestUnwrap(t *testing.T) {
 			want: nil,
 		},
 		{
-			name: "with stack",
+			name: testNameWithStack,
 			err:  errors.WithStack(testErr),
 			want: testErr,
 		},
 		{
-			name: "with wrap",
-			err:  errors.Wrap(testErr, "wrapped error"),
+			name: testNameWithWrap,
+			err:  errors.Wrap(testErr, testMessageWrappedError),
 			want: testErr,
 		},
 	}

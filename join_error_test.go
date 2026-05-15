@@ -115,7 +115,7 @@ func TestJoinError_Format(t *testing.T) {
 		{
 			name:      "detailed verbose format with stack trace",
 			joinedErr: errors.Join(standardErr1, err2),
-			format:    "%+v",
+			format:    testFormatDetailedVerbose,
 			wantRegexp: regexp.MustCompile(
 				`(?s)^first error\n` +
 					`second stackprune error\n` +
@@ -126,7 +126,7 @@ func TestJoinError_Format(t *testing.T) {
 		{
 			name:      "verbose format with mixed error types and stack traces",
 			joinedErr: errors.Join(standardErr1, err1, err2),
-			format:    "%+v",
+			format:    testFormatDetailedVerbose,
 			wantRegexp: regexp.MustCompile(
 				`(?s)^first error\n` +
 					`first stackprune error\n` +
@@ -188,6 +188,7 @@ func TestJoinError_Unwrap(t *testing.T) {
 
 			got := func() *errors.JoinError {
 				var target *errors.JoinError
+
 				_ = errors.As(tt.joinedErr, &target)
 
 				return target
@@ -274,6 +275,7 @@ func TestJoinError_As(t *testing.T) {
 			joinedErr: errors.Join(customErr, standardErr1),
 			testFunc: func(t *testing.T, joinedErr error) {
 				t.Helper()
+
 				var target customError
 				require.ErrorAs(t, joinedErr, &target)
 				assert.Equal(t, "custom error", target.message)
@@ -284,6 +286,7 @@ func TestJoinError_As(t *testing.T) {
 			joinedErr: errors.Join(customErr, standardErr1),
 			testFunc: func(t *testing.T, joinedErr error) {
 				t.Helper()
+
 				var joinErr *errors.JoinError
 				require.ErrorAs(t, joinedErr, &joinErr)
 				assert.NotNil(t, joinErr)
@@ -294,6 +297,7 @@ func TestJoinError_As(t *testing.T) {
 			joinedErr: errors.Join(err, standardErr1),
 			testFunc: func(t *testing.T, joinedErr error) {
 				t.Helper()
+
 				var stackpruneErr *errors.Error
 				require.ErrorAs(t, joinedErr, &stackpruneErr)
 				assert.NotNil(t, stackpruneErr)
@@ -305,6 +309,7 @@ func TestJoinError_As(t *testing.T) {
 			joinedErr: errors.Join(standardErr1),
 			testFunc: func(t *testing.T, joinedErr error) {
 				t.Helper()
+
 				var target customError
 				assert.NotErrorAs(t, joinedErr, &target)
 			},

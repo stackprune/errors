@@ -27,7 +27,7 @@ func TestError_Error(t *testing.T) {
 			want: "base error",
 		},
 		{
-			name: "wrapped error",
+			name: testNameWrappedError,
 			err:  errors.Wrap(baseErr, "wrapped"),
 			want: "wrapped: base error",
 		},
@@ -92,7 +92,7 @@ func TestError_Format(t *testing.T) {
 		{
 			name:   "detailed verbose format",
 			err:    baseErr,
-			format: "%+v",
+			format: testFormatDetailedVerbose,
 			wantRegexp: regexp.MustCompile(
 				`(?s)^test error\n` +
 					`github\.com/stackprune/errors_test\.TestError_Format\n` +
@@ -114,7 +114,7 @@ func TestError_Format(t *testing.T) {
 		{
 			name:   "wrapped error detailed verbose format",
 			err:    wrappedErr,
-			format: "%+v",
+			format: testFormatDetailedVerbose,
 			wantRegexp: regexp.MustCompile(
 				`(?s)^wrapped: test error\n` +
 					`github\.com/stackprune/errors_test\.wrapError\n` +
@@ -181,7 +181,7 @@ func TestError_Unwrap(t *testing.T) {
 	t.Parallel()
 
 	baseErr := errors.New("base error")
-	wrappedErr := errors.Wrap(baseErr, "wrapped error")
+	wrappedErr := errors.Wrap(baseErr, testMessageWrappedError)
 
 	tests := []struct {
 		name string
@@ -189,7 +189,7 @@ func TestError_Unwrap(t *testing.T) {
 		want error
 	}{
 		{
-			name: "wrapped error",
+			name: testNameWrappedError,
 			err:  wrappedErr,
 			want: baseErr,
 		},
@@ -206,6 +206,7 @@ func TestError_Unwrap(t *testing.T) {
 
 			stackpruneErr := func() *errors.Error {
 				var target *errors.Error
+
 				_ = errors.As(tt.err, &target)
 
 				return target

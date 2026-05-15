@@ -105,7 +105,7 @@ func (j *JoinError) LogValue() slog.Value {
 
 	return slog.GroupValue(
 		slog.String(logOptions.MessageKey, j.Error()),
-		slog.String(logOptions.KindKey, reflect.TypeOf(j).String()),
+		slog.String(logOptions.KindKey, reflect.TypeFor[*JoinError]().String()),
 		slog.Any(defaultErrorsKey, items),
 	)
 }

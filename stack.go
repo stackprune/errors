@@ -45,6 +45,7 @@ func callers(skip int) []uintptr {
 	)
 
 	var pcs [callersDepth]uintptr
+
 	length := runtime.Callers(defaultSkipDepth+skip, pcs[:])
 
 	return pcs[:length]

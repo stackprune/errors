@@ -52,44 +52,44 @@ func TestSetLogOptions_DefaultHandling(t *testing.T) {
 			name: "empty MessageKey uses default",
 			input: errors.LogOptions{
 				MessageKey:  "", // empty
-				KindKey:     "custom_kind",
-				StackKey:    "custom_stack",
+				KindKey:     testLogKeyCustomKind,
+				StackKey:    testLogKeyCustomStack,
 				StackFormat: errors.StackFormatObjectArray,
 			},
 			want: errors.LogOptions{
-				MessageKey:  "message", // default
-				KindKey:     "custom_kind",
-				StackKey:    "custom_stack",
+				MessageKey:  testLogKeyMessage, // default
+				KindKey:     testLogKeyCustomKind,
+				StackKey:    testLogKeyCustomStack,
 				StackFormat: errors.StackFormatObjectArray,
 			},
 		},
 		{
 			name: "empty KindKey uses default",
 			input: errors.LogOptions{
-				MessageKey:  "custom_message",
+				MessageKey:  testLogKeyCustomMessage,
 				KindKey:     "", // empty
-				StackKey:    "custom_stack",
+				StackKey:    testLogKeyCustomStack,
 				StackFormat: errors.StackFormatObjectArray,
 			},
 			want: errors.LogOptions{
-				MessageKey:  "custom_message",
-				KindKey:     "kind", // default
-				StackKey:    "custom_stack",
+				MessageKey:  testLogKeyCustomMessage,
+				KindKey:     testLogKeyKind, // default
+				StackKey:    testLogKeyCustomStack,
 				StackFormat: errors.StackFormatObjectArray,
 			},
 		},
 		{
 			name: "empty StackKey uses default",
 			input: errors.LogOptions{
-				MessageKey:  "custom_message",
-				KindKey:     "custom_kind",
+				MessageKey:  testLogKeyCustomMessage,
+				KindKey:     testLogKeyCustomKind,
 				StackKey:    "", // empty
 				StackFormat: errors.StackFormatObjectArray,
 			},
 			want: errors.LogOptions{
-				MessageKey:  "custom_message",
-				KindKey:     "custom_kind",
-				StackKey:    "stack", // default
+				MessageKey:  testLogKeyCustomMessage,
+				KindKey:     testLogKeyCustomKind,
+				StackKey:    testLogKeyStack, // default
 				StackFormat: errors.StackFormatObjectArray,
 			},
 		},
@@ -102,9 +102,9 @@ func TestSetLogOptions_DefaultHandling(t *testing.T) {
 				StackFormat: errors.StackFormatObjectArray,
 			},
 			want: errors.LogOptions{
-				MessageKey:  "message", // default
-				KindKey:     "kind",    // default
-				StackKey:    "stack",   // default
+				MessageKey:  testLogKeyMessage, // default
+				KindKey:     testLogKeyKind,    // default
+				StackKey:    testLogKeyStack,   // default
 				StackFormat: errors.StackFormatObjectArray,
 			},
 		},
@@ -128,6 +128,7 @@ func TestSetLogOptions_DefaultHandling(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			errors.SetLogOptions(tt.input)
+
 			got := errors.GetLogOptions()
 
 			assert.Equal(t, tt.want, got)
@@ -192,13 +193,13 @@ func TestError_LogValue(t *testing.T) {
 			},
 		},
 		{
-			name:        "wrapped error",
-			err:         errors.Wrap(io.EOF, "wrapped error"),
+			name:        testNameWrappedError,
+			err:         errors.Wrap(io.EOF, testMessageWrappedError),
 			stackFormat: errors.StackFormatStringArray,
 			check: func(t *testing.T, message string, kind string, stackFrames []any) {
 				t.Helper()
 
-				assert.Equal(t, "wrapped error: EOF", message)
+				assert.Equal(t, testLogMessageWrappedEOF, message)
 				assert.Equal(t, "*errors.errorString", kind)
 
 				for _, frame := range stackFrames {
@@ -236,9 +237,9 @@ func TestError_LogValue(t *testing.T) {
 				errors.SetLogOptions(defaultOptions)
 			})
 			errors.SetLogOptions(errors.LogOptions{
-				MessageKey:  "message",
-				KindKey:     "kind",
-				StackKey:    "stack",
+				MessageKey:  testLogKeyMessage,
+				KindKey:     testLogKeyKind,
+				StackKey:    testLogKeyStack,
 				StackFormat: tt.stackFormat,
 			})
 
@@ -256,9 +257,9 @@ func TestError_LogValue(t *testing.T) {
 			stackAttr := group[2]
 
 			// Check structure
-			require.Equal(t, "message", messageAttr.Key)
-			require.Equal(t, "kind", kindAttr.Key)
-			require.Equal(t, "stack", stackAttr.Key)
+			require.Equal(t, testLogKeyMessage, messageAttr.Key)
+			require.Equal(t, testLogKeyKind, kindAttr.Key)
+			require.Equal(t, testLogKeyStack, stackAttr.Key)
 
 			messageValue := messageAttr.Value.String()
 			kindValue := kindAttr.Value.String()
@@ -281,9 +282,9 @@ func TestJoinError_LogValue(t *testing.T) {
 		errors.SetLogOptions(defaultOptions)
 	})
 	errors.SetLogOptions(errors.LogOptions{
-		MessageKey:  "message",
-		KindKey:     "kind",
-		StackKey:    "stack",
+		MessageKey:  testLogKeyMessage,
+		KindKey:     testLogKeyKind,
+		StackKey:    testLogKeyStack,
 		StackFormat: errors.StackFormatStringArray,
 	})
 
@@ -298,18 +299,18 @@ func TestJoinError_LogValue(t *testing.T) {
 	group := joinErr.LogValue().Group()
 
 	assert.Equal(t, []slog.Attr{
-		slog.String("message", "first error\nsecond error"),
-		slog.String("kind", "*errors.JoinError"),
+		slog.String(testLogKeyMessage, "first error\nsecond error"),
+		slog.String(testLogKeyKind, "*errors.JoinError"),
 		slog.Any("errors", []any{
 			map[string]any{
-				"message": "first error",
-				"kind":    "*errors.Error",
-				"stack":   stackStrings(t, err1),
+				testLogKeyMessage: "first error",
+				testLogKeyKind:    "*errors.Error",
+				testLogKeyStack:   stackStrings(t, err1),
 			},
 			map[string]any{
-				"message": "second error",
-				"kind":    "*errors.Error",
-				"stack":   stackStrings(t, err2),
+				testLogKeyMessage: "second error",
+				testLogKeyKind:    "*errors.Error",
+				testLogKeyStack:   stackStrings(t, err2),
 			},
 		}),
 	}, group)

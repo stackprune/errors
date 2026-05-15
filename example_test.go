@@ -116,7 +116,8 @@ func ExampleError_Format() {
 }
 
 func handlerCreateUser() error {
-	if err := usecaseCreateUser(); err != nil {
+	err := usecaseCreateUser()
+	if err != nil {
 		return errors.WithStack(err)
 	}
 
@@ -124,7 +125,8 @@ func handlerCreateUser() error {
 }
 
 func usecaseCreateUser() error {
-	if err := repositoryInsertUser(); err != nil {
+	err := repositoryInsertUser()
+	if err != nil {
 		return errors.Wrap(err, "user creation failed")
 	}
 

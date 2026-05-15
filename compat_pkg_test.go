@@ -36,9 +36,9 @@ func TestWithStack(t *testing.T) {
 			want:  "standard error",
 		},
 		{
-			name:  "stackprune error input",
-			input: errors.New("wrapped error"),
-			want:  "wrapped error",
+			name:  testNameStackpruneErrorInput,
+			input: errors.New(testMessageWrappedError),
+			want:  testMessageWrappedError,
 		},
 	}
 
@@ -74,8 +74,8 @@ func TestWrap(t *testing.T) {
 			want:    "database failed: original error",
 		},
 		{
-			name:    "stackprune error input",
-			input:   errors.New("wrapped error"),
+			name:    testNameStackpruneErrorInput,
+			input:   errors.New(testMessageWrappedError),
 			message: "service failed",
 			want:    "service failed: wrapped error",
 		},
@@ -150,7 +150,7 @@ func TestWrapf(t *testing.T) {
 			want:   "user john cannot access /admin: permission denied",
 		},
 		{
-			name:   "stackprune error input",
+			name:   testNameStackpruneErrorInput,
 			input:  errors.New("original"),
 			format: "wrapped with %s",
 			args:   []any{"context"},

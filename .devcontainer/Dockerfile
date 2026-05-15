@@ -1,6 +1,6 @@
 FROM golang:1.22 AS builder
 
-RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.1.5 && \
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.12.2 && \
     mv $(go env GOPATH)/bin/golangci-lint $(go env GOPATH)/bin/golangci-lint-v2
 
 FROM golang:1.22
