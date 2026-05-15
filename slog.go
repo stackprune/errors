@@ -25,6 +25,7 @@ const (
 	defaultMessageKey = "message"
 	defaultKindKey    = "kind"
 	defaultStackKey   = "stack"
+	defaultErrorsKey  = "errors"
 )
 
 // LogOptions defines how *Error values are serialized for slog structured logging.
@@ -82,10 +83,86 @@ func SetLogOptions(options LogOptions) {
 // Stack trace formatting is determined by the global LogOptions.
 func (e *Error) LogValue() slog.Value {
 	logOptions := GetLogOptions()
-	stackFrames := e.Stacks()
+
+	return slog.GroupValue(
+		slog.String(logOptions.MessageKey, e.Error()),
+		slog.String(logOptions.KindKey, rootErrorKind(e)),
+		slog.Any(logOptions.StackKey, formatStackItems(e.Stacks(), logOptions.StackFormat)),
+	)
+}
+
+// LogValue implements slog.LogValuer for *JoinError.
+// It returns a structured value containing the joined message and each child error.
+func (j *JoinError) LogValue() slog.Value {
+	logOptions := GetLogOptions()
+	items := make([]any, 0, len(j.errs))
+
+	for _, err := range j.errs {
+		if err != nil {
+			items = append(items, logErrorMap(err, logOptions))
+		}
+	}
+
+	return slog.GroupValue(
+		slog.String(logOptions.MessageKey, j.Error()),
+		slog.String(logOptions.KindKey, reflect.TypeOf(j).String()),
+		slog.Any(defaultErrorsKey, items),
+	)
+}
+
+func logErrorMap(err error, logOptions LogOptions) map[string]any {
+	result := map[string]any{
+		logOptions.MessageKey: err.Error(),
+		logOptions.KindKey:    reflect.TypeOf(err).String(),
+	}
+
+	switch e := err.(type) {
+	case *Error:
+		result[logOptions.KindKey] = rootErrorKind(e)
+		result[logOptions.StackKey] = formatStackItems(e.Stacks(), logOptions.StackFormat)
+	case *JoinError:
+		items := make([]any, 0, len(e.errs))
+
+		for _, child := range e.errs {
+			if child != nil {
+				items = append(items, logErrorMap(child, logOptions))
+			}
+		}
+
+		result[defaultErrorsKey] = items
+	default:
+		var errorWithStack *Error
+		if As(err, &errorWithStack) {
+			result[logOptions.KindKey] = rootErrorKind(errorWithStack)
+			result[logOptions.StackKey] = formatStackItems(
+				errorWithStack.Stacks(),
+				logOptions.StackFormat,
+			)
+		}
+	}
+
+	return result
+}
+
+func rootErrorKind(e *Error) string {
+	rootErr := error(e)
+
+	for {
+		unwrapped := Unwrap(rootErr)
+		if unwrapped == nil {
+			break
+		}
+
+		rootErr = unwrapped
+	}
+
+	return reflect.TypeOf(rootErr).String()
+}
+
+func formatStackItems(stackFrames []Stack, stackFormat StackFormat) []any {
 	stackItems := make([]any, 0, len(stackFrames))
 
-	switch logOptions.StackFormat {
+	switch stackFormat {
 	case StackFormatObjectArray:
 		for _, frame := range stackFrames {
 			stackItems = append(stackItems, map[string]any{
@@ -105,22 +182,8 @@ func (e *Error) LogValue() slog.Value {
 		}
 	}
 
-	rootErr := error(e)
-
-	for {
-		unwrapped := Unwrap(rootErr)
-		if unwrapped == nil {
-			break
-		}
-
-		rootErr = unwrapped
-	}
-
-	return slog.GroupValue(
-		slog.String(logOptions.MessageKey, e.Error()),
-		slog.String(logOptions.KindKey, reflect.TypeOf(rootErr).String()),
-		slog.Any(logOptions.StackKey, stackItems),
-	)
+	return stackItems
 }
 
 var _ slog.LogValuer = (*Error)(nil)
+var _ slog.LogValuer = (*JoinError)(nil)

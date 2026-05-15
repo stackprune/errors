@@ -2,6 +2,8 @@ package errors_test
 
 import (
 	"io"
+	"log/slog"
+	"strconv"
 	"testing"
 
 	"github.com/stackprune/errors"
@@ -269,4 +271,63 @@ func TestError_LogValue(t *testing.T) {
 			}
 		})
 	}
+}
+
+//nolint:paralleltest
+func TestJoinError_LogValue(t *testing.T) {
+	defaultOptions := errors.GetLogOptions()
+
+	t.Cleanup(func() {
+		errors.SetLogOptions(defaultOptions)
+	})
+	errors.SetLogOptions(errors.LogOptions{
+		MessageKey:  "message",
+		KindKey:     "kind",
+		StackKey:    "stack",
+		StackFormat: errors.StackFormatStringArray,
+	})
+
+	err1 := errors.New("first error")
+	err2 := errors.New("second error")
+	joinedErr := errors.Join(err1, err2)
+
+	var joinErr *errors.JoinError
+	require.ErrorAs(t, joinedErr, &joinErr)
+
+	group := joinErr.LogValue().Group()
+
+	assert.Equal(t, []slog.Attr{
+		slog.String("message", "first error\nsecond error"),
+		slog.String("kind", "*errors.JoinError"),
+		slog.Any("errors", []any{
+			map[string]any{
+				"message": "first error",
+				"kind":    "*errors.Error",
+				"stack":   stackStrings(t, err1),
+			},
+			map[string]any{
+				"message": "second error",
+				"kind":    "*errors.Error",
+				"stack":   stackStrings(t, err2),
+			},
+		}),
+	}, group)
+}
+
+func stackStrings(t *testing.T, err error) []any {
+	t.Helper()
+
+	var stackErr *errors.Error
+	require.ErrorAs(t, err, &stackErr)
+
+	stackItems := make([]any, 0, len(stackErr.Stacks()))
+
+	for _, frame := range stackErr.Stacks() {
+		stackItems = append(
+			stackItems,
+			frame.FuncName+" at "+frame.File+":"+strconv.Itoa(frame.LineNumber),
+		)
+	}
+
+	return stackItems
 }
