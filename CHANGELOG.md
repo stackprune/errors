@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2026-11-16
 
 ### Changed
-- Raise the minimum Go version from 1.22 to 1.26 and support the two most recent Go release series (currently 1.26 and 1.27).
+- Raise the minimum Go version from 1.22 to 1.26.
 - Update the development container to Go 1.27 and golangci-lint v2.15.0, and test Go 1.26 and 1.27 in CI.
 
 ## [1.1.1] - 2026-05-15
