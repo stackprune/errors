@@ -18,7 +18,7 @@ type Stack struct {
 
 // NewStack constructs a Stack from a raw program counter using runtime metadata.
 func NewStack(programCounter uintptr) Stack {
-	//nolint:exhaustruct
+	//nolint:exhaustruct_v5
 	stack := Stack{ProgramCounter: programCounter}
 	if stack.ProgramCounter == 0 {
 		return stack

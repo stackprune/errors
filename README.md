@@ -188,7 +188,7 @@ main.main
 ## Requirements
 
 ```txt
-Go 1.22+
+Go 1.26+
 Zero external dependencies
 ```
 

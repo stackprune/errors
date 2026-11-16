@@ -64,8 +64,7 @@ func (j *JoinError) printVerbose(state fmt.State) {
 			_, _ = io.WriteString(state, "\n")
 		}
 
-		var errorWithStack *Error
-		if errors.As(err, &errorWithStack) {
+		if errorWithStack, ok := errors.AsType[*Error](err); ok {
 			if !printedStack {
 				_, _ = fmt.Fprintf(state, "%+v", errorWithStack) // with stack
 
