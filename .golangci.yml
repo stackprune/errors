@@ -2,6 +2,7 @@ version: "2"
 linters:
   default: all
   disable:
+    - exhaustruct
     - gomodguard
     - wsl
   settings:
@@ -20,7 +21,7 @@ linters:
     rules:
       - linters:
           - err113
-          - exhaustruct
+          - exhaustruct_v5
           - funlen
         path: _test\.go
 formatters:

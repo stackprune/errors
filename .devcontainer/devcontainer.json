@@ -29,7 +29,7 @@
         ],
         "go.formatTool": "custom",
         "go.alternateTools": {
-          "customFormatter": "golangci-lint-v2"
+          "customFormatter": "golangci-lint"
         },
         "go.formatFlags": [
           "fmt",
@@ -39,7 +39,7 @@
           "--path-mode=abs",
           "--fast-only"
         ],
-        "go.lintTool": "golangci-lint-v2"
+        "go.lintTool": "golangci-lint"
       },
       "extensions": [
         "golang.go",

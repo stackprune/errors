@@ -188,9 +188,14 @@ main.main
 ## Requirements
 
 ```txt
-Go 1.22+
+Go 1.26+
 Zero external dependencies
 ```
+
+We support the two most recent Go release series, currently Go 1.26 and 1.27.
+CI tests the latest patch release of each supported series. When a new Go series
+is adopted, the minimum version in `go.mod`, the CI matrix, and the development
+container are updated together.
 
 ---
 
