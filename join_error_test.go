@@ -4,6 +4,7 @@ import (
 	stderrors "errors"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stackprune/errors"
@@ -148,6 +149,61 @@ func TestJoinError_Format(t *testing.T) {
 			} else {
 				assert.Regexp(t, tt.wantRegexp, got)
 			}
+		})
+	}
+}
+
+func TestJoinError_Format_PreservesMessages(t *testing.T) {
+	t.Parallel()
+
+	first := errors.New("first")
+	second := errors.New("second")
+	third := stderrors.New("third")
+	firstVerbose := fmt.Sprintf("%+v", first)
+	stack := strings.TrimPrefix(firstVerbose, "first")
+
+	tests := []struct {
+		name string
+		err  error
+		want string
+	}{
+		{
+			name: "standard wrapper before stack",
+			err:  errors.Join(fmt.Errorf("context: %w", first), third),
+			want: "context: " + firstVerbose + "\nthird",
+		},
+		{
+			name: "standard wrapper after stack",
+			err:  errors.Join(first, fmt.Errorf("context: %w", second)),
+			want: firstVerbose + "\ncontext: second",
+		},
+		{
+			name: "nested join before stack",
+			err:  errors.Join(errors.Join(first, second), third),
+			want: "first\nsecond" + stack + "\nthird",
+		},
+		{
+			name: "nested join after stack",
+			err:  errors.Join(first, errors.Join(second, third)),
+			want: firstVerbose + "\nsecond\nthird",
+		},
+		{
+			name: "standard join",
+			err:  errors.Join(stderrors.Join(first, second), third),
+			want: "first\nsecond" + stack + "\nthird",
+		},
+		{
+			name: "multiple wrapped errors",
+			err:  errors.Join(fmt.Errorf("batch: %w / %w", first, second), third),
+			want: "batch: first / second" + stack + "\nthird",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tt.want, fmt.Sprintf("%+v", tt.err))
 		})
 	}
 }

@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- Evaluate each wrapped error's message once per `Error()` call, avoiding exponential calls to the underlying error when wrapping repeatedly.
+- Preserve wrapper context and all nested error messages in `JoinError`'s `%+v` output while printing only the first stack trace.
+- Synchronize stack cache access to avoid data races when calling `Stacks`, formatting, logging, or wrapping the same error concurrently.
+
 ## [1.2.0] - 2026-11-16
 
 ### Changed

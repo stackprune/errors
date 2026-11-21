@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stackprune/errors"
@@ -54,6 +55,32 @@ func TestError_Error(t *testing.T) {
 
 			got := tt.err.Error()
 			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestError_Error_CauseEvaluatedOnce(t *testing.T) {
+	t.Parallel()
+
+	for _, depth := range []int{1, 12} {
+		t.Run(fmt.Sprintf("%d wraps", depth), func(t *testing.T) {
+			t.Parallel()
+
+			cause := &countingError{message: "root"}
+
+			var err error = cause
+
+			for range depth {
+				err = errors.Wrap(err, "wrapped")
+			}
+
+			want := strings.Repeat("wrapped: ", depth) + "root"
+
+			assert.Equal(t, want, err.Error())
+			assert.Equal(t, 1, cause.calls)
+
+			assert.Equal(t, want, err.Error())
+			assert.Equal(t, 2, cause.calls)
 		})
 	}
 }
@@ -139,6 +166,17 @@ func TestError_Format(t *testing.T) {
 	}
 }
 
+type countingError struct {
+	message string
+	calls   int
+}
+
+func (e *countingError) Error() string {
+	e.calls++
+
+	return e.message
+}
+
 func TestError_Stacks(t *testing.T) {
 	t.Parallel()
 
@@ -175,6 +213,104 @@ func TestError_Stacks(t *testing.T) {
 		assert.GreaterOrEqual(t, got.LineNumber, 1)
 		assert.GreaterOrEqual(t, got.ProgramCounter, uintptr(1))
 	}
+}
+
+func TestError_Stacks_Concurrent(t *testing.T) {
+	t.Parallel()
+
+	const workers = 16
+
+	for range 4 {
+		var original *errors.Error
+
+		require.ErrorAs(t, errors.New("shared"), &original)
+
+		start := make(chan struct{})
+		results := make(chan []errors.Stack, workers)
+
+		for index := range workers {
+			go func() {
+				<-start
+
+				if index%2 == 0 {
+					results <- original.Stacks()
+
+					return
+				}
+
+				var wrapped *errors.Error
+
+				if !errors.As(errors.Wrap(original, "context"), &wrapped) {
+					results <- nil
+
+					return
+				}
+
+				results <- wrapped.Stacks()
+			}()
+		}
+
+		close(start)
+
+		want := <-results
+		require.NotEmpty(t, want)
+
+		for range workers - 1 {
+			assert.Equal(t, want, <-results)
+		}
+	}
+}
+
+func TestError_Stacks_CacheSharing(t *testing.T) {
+	t.Parallel()
+
+	for _, cached := range []bool{false, true} {
+		t.Run(fmt.Sprintf("cached=%t", cached), func(t *testing.T) {
+			t.Parallel()
+
+			var original *errors.Error
+
+			require.ErrorAs(t, errors.New("original"), &original)
+
+			if cached {
+				_ = original.Stacks()
+			}
+
+			copied := *original
+
+			var wrapped *errors.Error
+
+			require.ErrorAs(t, errors.Wrap(original, "context"), &wrapped)
+
+			originalStacks := original.Stacks()
+			require.NotEmpty(t, originalStacks)
+
+			for _, stacks := range [][]errors.Stack{copied.Stacks(), wrapped.Stacks()} {
+				require.Equal(t, originalStacks, stacks)
+
+				if cached {
+					assert.Same(t, &originalStacks[0], &stacks[0])
+				} else {
+					assert.NotSame(t, &originalStacks[0], &stacks[0])
+				}
+			}
+		})
+	}
+}
+
+func TestError_Stacks_ZeroValue(t *testing.T) {
+	t.Parallel()
+
+	var original errors.Error
+
+	assert.NotNil(t, original.Stacks())
+	assert.Empty(t, original.Stacks())
+
+	var wrapped *errors.Error
+
+	require.ErrorAs(t, errors.Wrap(&original, "context"), &wrapped)
+	assert.NotNil(t, wrapped.Stacks())
+	assert.Empty(t, wrapped.Stacks())
 }
 
 func TestError_Unwrap(t *testing.T) {
