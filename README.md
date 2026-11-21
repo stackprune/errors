@@ -1,5 +1,10 @@
 # stackprune/errors
 
+> **Version 2 is available.** For new integrations, use
+> [`github.com/stackprune/errors/v2`](https://pkg.go.dev/github.com/stackprune/errors/v2).
+> This page documents v1. See the [v2 migration guide](https://github.com/stackprune/errors/tree/v2.0.0#upgrading-from-v1)
+> for import path and structured logging changes.
+
 A modern, lightweight error handling library for Go — focused on:
 
 * ✅ Clean, single-stack trace errors (no duplication)
