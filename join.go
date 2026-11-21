@@ -1,6 +1,6 @@
 // join.go defines the Join function to combine multiple error values.
-// It wraps Go 1.20+ errors.Join where available, and provides a fallback
-// that preserves stack-aware behavior across combined errors.
+// It returns a JoinError that preserves its children for unwrapping,
+// formatting, and structured logging.
 
 package errors
 

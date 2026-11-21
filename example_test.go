@@ -74,7 +74,7 @@ func ExampleJoin_withNil() {
 	// second error
 }
 
-// ExampleJoin_single demonstrates that joining a single error returns the original error.
+// ExampleJoin_single demonstrates that joining a single error preserves its message.
 func ExampleJoin_single() {
 	originalErr := errors.New("single error")
 	joinedErr := errors.Join(originalErr)
@@ -148,13 +148,13 @@ func ExampleError_Format_stackTrace() {
 
 	// Example output:
 	// Error: user creation failed: failed to insert user into database
-	// github.com/stackprune/errors_test.repositoryInsertUser
+	// github.com/stackprune/errors/v2_test.repositoryInsertUser
 	// 	/app/example_test.go:133
-	// github.com/stackprune/errors_test.usecaseCreateUser
+	// github.com/stackprune/errors/v2_test.usecaseCreateUser
 	// 	/app/example_test.go:125
-	// github.com/stackprune/errors_test.handlerCreateUser
+	// github.com/stackprune/errors/v2_test.handlerCreateUser
 	// 	/app/example_test.go:117
-	// github.com/stackprune/errors_test.ExampleError_Format_stackTrace
+	// github.com/stackprune/errors/v2_test.ExampleError_Format_stackTrace
 	// 	/app/example_test.go:139
 }
 
@@ -190,9 +190,9 @@ func Example_slogStructuredLogging() {
 	//     "message": "missing config",
 	//     "kind": "*errors.Error",
 	//     "stack": [
-	//       "loadConfig at config.go:42",
-	//       "main at main.go:10"
-	//     ]
+	//       "github.com/stackprune/errors/v2_test.Example_slogStructuredLogging at /app/example_test.go:179"
+	//     ],
+	//     "children": []
 	//   }
 	// }
 }
@@ -219,8 +219,8 @@ func ExampleRecoverError() {
 	// database operation failed: connection timeout
 	// runtime.gopanic
 	// 	/usr/local/go/src/runtime/panic.go:770
-	// github.com/stackprune/errors_test.ExampleRecoverError.func1
+	// github.com/stackprune/errors/v2_test.ExampleRecoverError.func1
 	// 	/app/example_test.go:208
-	// github.com/stackprune/errors_test.ExampleRecoverError
+	// github.com/stackprune/errors/v2_test.ExampleRecoverError
 	// 	/app/example_test.go:211
 }
