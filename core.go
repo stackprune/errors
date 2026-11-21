@@ -7,6 +7,7 @@ package errors
 import (
 	"errors"
 	"fmt"
+	"sync"
 )
 
 // New creates an error with a message.
@@ -17,6 +18,7 @@ func New(message string) error {
 		message:         message,
 		programCounters: callers(0),
 		cachedStacks:    nil,
+		stackMutex:      new(sync.Mutex),
 	}
 }
 
@@ -28,6 +30,7 @@ func NewWithCallers(message string, programCounters []uintptr) error {
 		message:         message,
 		programCounters: programCounters,
 		cachedStacks:    nil,
+		stackMutex:      new(sync.Mutex),
 	}
 }
 
@@ -43,6 +46,7 @@ func Errorf(format string, args ...any) error {
 		message:         fmt.Sprintf(format, args...),
 		programCounters: callers(0),
 		cachedStacks:    nil,
+		stackMutex:      new(sync.Mutex),
 	}
 }
 

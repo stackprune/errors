@@ -9,14 +9,16 @@ import (
 	"io"
 	"slices"
 	"strings"
+	"sync"
 )
 
 // Error represents an error with optional stack trace and cause. Implements standard interfaces.
 type Error struct {
-	err             error     // wrapped error
-	message         string    // contextual message for wrapping, not the final error string
-	programCounters []uintptr // program counters for stack trace
-	cachedStacks    []Stack   // cached stack traces to avoid recomputing
+	err             error       // wrapped error
+	message         string      // contextual message for wrapping, not the final error string
+	programCounters []uintptr   // program counters for stack trace
+	cachedStacks    []Stack     // cached stack traces to avoid recomputing
+	stackMutex      *sync.Mutex // guards cachedStacks without preventing Error value copies
 }
 
 // Cause returns the underlying error.
@@ -70,7 +72,15 @@ func (e *Error) ProgramCounters() []uintptr {
 }
 
 // Stacks returns the stack trace.
+// It is safe to call concurrently.
 func (e *Error) Stacks() []Stack {
+	if e.stackMutex == nil {
+		return []Stack{}
+	}
+
+	e.stackMutex.Lock()
+	defer e.stackMutex.Unlock()
+
 	if e.cachedStacks != nil {
 		return e.cachedStacks
 	}
@@ -102,6 +112,18 @@ func (e *Error) Stacks() []Stack {
 // Unwrap returns the underlying cause error for compatibility with errors.Is and errors.As.
 func (e *Error) Unwrap() error {
 	return e.err
+}
+
+// cachedStackFrames returns the current cache without computing it.
+func (e *Error) cachedStackFrames() []Stack {
+	if e.stackMutex == nil {
+		return nil
+	}
+
+	e.stackMutex.Lock()
+	defer e.stackMutex.Unlock()
+
+	return e.cachedStacks
 }
 
 // printStack prints the stack trace without the error message.

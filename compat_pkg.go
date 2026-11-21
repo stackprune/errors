@@ -6,6 +6,7 @@ package errors
 
 import (
 	"fmt"
+	"sync"
 )
 
 // WithStack adds a stack trace to the error, if not already present.
@@ -38,7 +39,7 @@ func wrapWithMessage(err error, message string) error {
 	var errorWithStack *Error
 	if As(err, &errorWithStack) {
 		programCounters = errorWithStack.programCounters
-		cachedStacks = errorWithStack.cachedStacks
+		cachedStacks = errorWithStack.cachedStackFrames()
 	} else {
 		programCounters = callers(0)
 	}
@@ -48,5 +49,6 @@ func wrapWithMessage(err error, message string) error {
 		message:         message,
 		programCounters: programCounters,
 		cachedStacks:    cachedStacks,
+		stackMutex:      new(sync.Mutex),
 	}
 }
