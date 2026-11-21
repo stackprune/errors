@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stackprune/errors"
+	"github.com/stackprune/errors/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -120,7 +120,7 @@ func TestJoinError_Format(t *testing.T) {
 			wantRegexp: regexp.MustCompile(
 				`(?s)^first error\n` +
 					`second stackprune error\n` +
-					`github\.com/stackprune/errors_test\.TestJoinError_Format\n` +
+					`github\.com/stackprune/errors/v2_test\.TestJoinError_Format\n` +
 					`\t[\S]+/join_error_test\.go:\d+\n`,
 			),
 		},
@@ -131,7 +131,7 @@ func TestJoinError_Format(t *testing.T) {
 			wantRegexp: regexp.MustCompile(
 				`(?s)^first error\n` +
 					`first stackprune error\n` +
-					`github\.com/stackprune/errors_test\.TestJoinError_Format\n` +
+					`github\.com/stackprune/errors/v2_test\.TestJoinError_Format\n` +
 					`\t[\S]+/join_error_test\.go:\d+\n` +
 					`.+\n` +
 					`second stackprune error`,

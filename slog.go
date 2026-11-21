@@ -22,13 +22,13 @@ const (
 )
 
 const (
-	defaultMessageKey = "message"
-	defaultKindKey    = "kind"
-	defaultStackKey   = "stack"
-	defaultErrorsKey  = "errors"
+	defaultMessageKey  = "message"
+	defaultKindKey     = "kind"
+	defaultStackKey    = "stack"
+	defaultChildrenKey = "children"
 )
 
-// LogOptions defines how *Error values are serialized for slog structured logging.
+// LogOptions defines how *Error and *JoinError values are serialized for slog structured logging.
 // It allows customization of key names and stack trace formatting.
 type LogOptions struct {
 	MessageKey  string
@@ -59,8 +59,8 @@ func GetLogOptions() LogOptions {
 	return opt
 }
 
-// SetLogOptions updates the global LogOptions used for logging *Error values with slog.
-// This affects all future calls to *Error.LogValue.
+// SetLogOptions updates the global LogOptions used for logging *Error and *JoinError values with slog.
+// This affects all future calls to their LogValue methods.
 // This function is safe for concurrent use.
 func SetLogOptions(options LogOptions) {
 	if options.MessageKey == "" {
@@ -79,72 +79,86 @@ func SetLogOptions(options LogOptions) {
 }
 
 // LogValue implements slog.LogValuer for *Error.
-// It returns a structured slog.Value containing the error kind, message, and stack trace.
-// Stack trace formatting is determined by the global LogOptions.
+// It returns message, kind, stack, and children fields using the global LogOptions.
+// Wrap adds context to the message without adding a level to the error tree.
 func (e *Error) LogValue() slog.Value {
-	logOptions := GetLogOptions()
-
-	return slog.GroupValue(
-		slog.String(logOptions.MessageKey, e.Error()),
-		slog.String(logOptions.KindKey, rootErrorKind(e)),
-		slog.Any(logOptions.StackKey, formatStackItems(e.Stacks(), logOptions.StackFormat)),
-	)
+	return logErrorValue(e)
 }
 
 // LogValue implements slog.LogValuer for *JoinError.
-// It returns a structured value containing the joined message and each child error.
+// It preserves the joined error tree and emits only the first available stack
+// at the top level. Child errors contain message, kind, and children fields.
 func (j *JoinError) LogValue() slog.Value {
-	logOptions := GetLogOptions()
-	items := make([]any, 0, len(j.errs))
+	return logErrorValue(j)
+}
 
-	for _, err := range j.errs {
-		if err != nil {
-			items = append(items, logErrorMap(err, logOptions))
-		}
-	}
+func logErrorValue(err error) slog.Value {
+	logOptions := GetLogOptions()
 
 	return slog.GroupValue(
-		slog.String(logOptions.MessageKey, j.Error()),
-		slog.String(logOptions.KindKey, reflect.TypeFor[*JoinError]().String()),
-		slog.Any(defaultErrorsKey, items),
+		slog.String(logOptions.MessageKey, err.Error()),
+		slog.String(logOptions.KindKey, rootErrorKind(err)),
+		slog.Any(logOptions.StackKey, formatStackItems(firstStack(err), logOptions.StackFormat)),
+		slog.Any(defaultChildrenKey, logErrorChildren(err, logOptions)),
 	)
 }
 
 func logErrorMap(err error, logOptions LogOptions) map[string]any {
-	result := map[string]any{
+	return map[string]any{
 		logOptions.MessageKey: err.Error(),
-		logOptions.KindKey:    reflect.TypeOf(err).String(),
+		logOptions.KindKey:    rootErrorKind(err),
+		defaultChildrenKey:    logErrorChildren(err, logOptions),
 	}
-
-	var joinErr *JoinError
-	if As(err, &joinErr) {
-		items := make([]any, 0, len(joinErr.errs))
-
-		for _, child := range joinErr.errs {
-			if child != nil {
-				items = append(items, logErrorMap(child, logOptions))
-			}
-		}
-
-		result[defaultErrorsKey] = items
-
-		return result
-	}
-
-	var errorWithStack *Error
-	if As(err, &errorWithStack) {
-		result[logOptions.KindKey] = rootErrorKind(errorWithStack)
-		result[logOptions.StackKey] = formatStackItems(
-			errorWithStack.Stacks(),
-			logOptions.StackFormat,
-		)
-	}
-
-	return result
 }
 
-func rootErrorKind(e *Error) string {
-	rootErr := error(e)
+func logErrorChildren(err error, logOptions LogOptions) []any {
+	for {
+		if joined, ok := err.(interface{ Unwrap() []error }); ok {
+			children := joined.Unwrap()
+			items := make([]any, 0, len(children))
+
+			for _, child := range children {
+				if child != nil {
+					items = append(items, logErrorMap(child, logOptions))
+				}
+			}
+
+			return items
+		}
+
+		err = Unwrap(err)
+		if err == nil {
+			return []any{}
+		}
+	}
+}
+
+// firstStack traverses errors in depth-first order without decoding later stacks.
+//
+//nolint:errorlint // Inspect the current node; errors.As would also search descendants.
+func firstStack(err error) []Stack {
+	if stackErr, ok := err.(*Error); ok {
+		if stack := stackErr.Stacks(); len(stack) > 0 {
+			return stack
+		}
+	}
+
+	switch wrapped := err.(type) {
+	case interface{ Unwrap() []error }:
+		for _, child := range wrapped.Unwrap() {
+			if stack := firstStack(child); len(stack) > 0 {
+				return stack
+			}
+		}
+	case interface{ Unwrap() error }:
+		return firstStack(wrapped.Unwrap())
+	}
+
+	return nil
+}
+
+func rootErrorKind(err error) string {
+	rootErr := err
 
 	for {
 		unwrapped := Unwrap(rootErr)

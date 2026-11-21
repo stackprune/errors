@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/stackprune/errors"
+	"github.com/stackprune/errors/v2"
 )
 
 // ExampleNew demonstrates basic error creation with stack trace.

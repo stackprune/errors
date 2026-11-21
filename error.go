@@ -89,7 +89,7 @@ func (e *Error) Stacks() []Stack {
 
 	for _, pc := range e.programCounters {
 		stack := NewStack(pc)
-		if strings.HasPrefix(stack.FuncName, "github.com/stackprune/errors.") {
+		if strings.HasPrefix(stack.FuncName, "github.com/stackprune/errors/v2.") {
 			// Skip internal functions to avoid cluttering the stack trace
 			continue
 		}

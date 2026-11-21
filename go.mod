@@ -1,4 +1,4 @@
-module github.com/stackprune/errors
+module github.com/stackprune/errors/v2
 
 go 1.26.0
 
