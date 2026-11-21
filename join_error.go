@@ -31,7 +31,7 @@ func (j *JoinError) Error() string {
 }
 
 // Format implements fmt.Formatter for JoinError.
-// Use %+v to display stack traces for the first Error type only.
+// Use %+v to display all messages and the stack trace from the first Error type only.
 func (j *JoinError) Format(state fmt.State, verb rune) {
 	switch verb {
 	case 'v':
@@ -65,12 +65,12 @@ func (j *JoinError) printVerbose(state fmt.State) {
 		}
 
 		if errorWithStack, ok := errors.AsType[*Error](err); ok {
+			_, _ = io.WriteString(state, err.Error())
+
 			if !printedStack {
-				_, _ = fmt.Fprintf(state, "%+v", errorWithStack) // with stack
+				errorWithStack.printStack(state)
 
 				printedStack = true
-			} else {
-				_, _ = fmt.Fprintf(state, "%s", errorWithStack) // without stack
 			}
 		} else {
 			_, _ = fmt.Fprintf(state, "%+v", err)

@@ -51,15 +51,7 @@ func (e *Error) Format(state fmt.State, verb rune) {
 		if state.Flag('+') {
 			_, _ = io.WriteString(state, e.Error())
 
-			for _, stack := range e.Stacks() {
-				_, _ = fmt.Fprintf(
-					state,
-					"\n%v\n\t%s:%d",
-					stack.FuncName,
-					stack.File,
-					stack.LineNumber,
-				)
-			}
+			e.printStack(state)
 
 			return
 		}
@@ -110,6 +102,19 @@ func (e *Error) Stacks() []Stack {
 // Unwrap returns the underlying cause error for compatibility with errors.Is and errors.As.
 func (e *Error) Unwrap() error {
 	return e.err
+}
+
+// printStack prints the stack trace without the error message.
+func (e *Error) printStack(state fmt.State) {
+	for _, stack := range e.Stacks() {
+		_, _ = fmt.Fprintf(
+			state,
+			"\n%v\n\t%s:%d",
+			stack.FuncName,
+			stack.File,
+			stack.LineNumber,
+		)
+	}
 }
 
 var _ error = (*Error)(nil)

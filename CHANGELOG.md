@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Evaluate each wrapped error's message once per `Error()` call, avoiding exponential calls to the underlying error when wrapping repeatedly.
+- Preserve wrapper context and all nested error messages in `JoinError`'s `%+v` output while printing only the first stack trace.
 
 ## [1.2.0] - 2026-11-16
 
