@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/stackprune/errors"
+	"github.com/stackprune/errors/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -152,7 +152,7 @@ func TestError_LogValue(t *testing.T) {
 				t.Helper()
 
 				assert.Equal(t, "test error", message)
-				assert.Equal(t, "*errors.Error", kind)
+				assert.Equal(t, testLogKindError, kind)
 
 				for _, frame := range stackFrames {
 					stackString, ok := frame.(string)
@@ -174,7 +174,7 @@ func TestError_LogValue(t *testing.T) {
 				t.Helper()
 
 				assert.Equal(t, "test error", message)
-				assert.Equal(t, "*errors.Error", kind)
+				assert.Equal(t, testLogKindError, kind)
 
 				for _, item := range stackFrames {
 					stack, ok := item.(map[string]any)
@@ -200,7 +200,7 @@ func TestError_LogValue(t *testing.T) {
 				t.Helper()
 
 				assert.Equal(t, testLogMessageWrappedEOF, message)
-				assert.Equal(t, "*errors.errorString", kind)
+				assert.Equal(t, testLogKindStandardError, kind)
 
 				for _, frame := range stackFrames {
 					stackString, ok := frame.(string)
@@ -222,7 +222,7 @@ func TestError_LogValue(t *testing.T) {
 				t.Helper()
 
 				assert.Empty(t, message)
-				assert.Equal(t, "*errors.Error", kind)
+				assert.Equal(t, testLogKindError, kind)
 				assert.NotEmpty(t, stackFrames)
 			},
 		},
@@ -250,7 +250,7 @@ func TestError_LogValue(t *testing.T) {
 			require.ErrorAs(t, baseErr, &err)
 
 			group := err.LogValue().Group()
-			require.Len(t, group, 3)
+			require.Len(t, group, 4)
 
 			messageAttr := group[0]
 			kindAttr := group[1]
@@ -260,6 +260,7 @@ func TestError_LogValue(t *testing.T) {
 			require.Equal(t, testLogKeyMessage, messageAttr.Key)
 			require.Equal(t, testLogKeyKind, kindAttr.Key)
 			require.Equal(t, testLogKeyStack, stackAttr.Key)
+			require.Equal(t, slog.Any(testLogKeyChildren, []any{}), group[3])
 
 			messageValue := messageAttr.Value.String()
 			kindValue := kindAttr.Value.String()
@@ -300,17 +301,18 @@ func TestJoinError_LogValue(t *testing.T) {
 
 	assert.Equal(t, []slog.Attr{
 		slog.String(testLogKeyMessage, "first error\nsecond error"),
-		slog.String(testLogKeyKind, "*errors.JoinError"),
-		slog.Any("errors", []any{
+		slog.String(testLogKeyKind, testLogKindJoinError),
+		slog.Any(testLogKeyStack, stackStrings(t, err1)),
+		slog.Any(testLogKeyChildren, []any{
 			map[string]any{
-				testLogKeyMessage: "first error",
-				testLogKeyKind:    "*errors.Error",
-				testLogKeyStack:   stackStrings(t, err1),
+				testLogKeyMessage:  "first error",
+				testLogKeyKind:     testLogKindError,
+				testLogKeyChildren: []any{},
 			},
 			map[string]any{
-				testLogKeyMessage: "second error",
-				testLogKeyKind:    "*errors.Error",
-				testLogKeyStack:   stackStrings(t, err2),
+				testLogKeyMessage:  "second error",
+				testLogKeyKind:     testLogKindError,
+				testLogKeyChildren: []any{},
 			},
 		}),
 	}, group)

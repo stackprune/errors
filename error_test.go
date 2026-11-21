@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stackprune/errors"
+	"github.com/stackprune/errors/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -122,7 +122,7 @@ func TestError_Format(t *testing.T) {
 			format: testFormatDetailedVerbose,
 			wantRegexp: regexp.MustCompile(
 				`(?s)^test error\n` +
-					`github\.com/stackprune/errors_test\.TestError_Format\n` +
+					`github\.com/stackprune/errors/v2_test\.TestError_Format\n` +
 					`\t[\S]+/error_test\.go:\d+\n`,
 			),
 		},
@@ -144,9 +144,9 @@ func TestError_Format(t *testing.T) {
 			format: testFormatDetailedVerbose,
 			wantRegexp: regexp.MustCompile(
 				`(?s)^wrapped: test error\n` +
-					`github\.com/stackprune/errors_test\.wrapError\n` +
+					`github\.com/stackprune/errors/v2_test\.wrapError\n` +
 					`\t[\S]+/testutil_test\.go:11\n` +
-					`github\.com/stackprune/errors_test\.TestError_Format\n` +
+					`github\.com/stackprune/errors/v2_test\.TestError_Format\n` +
 					`\t[\S]+/error_test\.go:\d+\n`,
 			),
 		},
@@ -197,11 +197,11 @@ func TestError_Stacks(t *testing.T) {
 	}{
 		{
 			baseFileName: "testutil_test.go",
-			funcName:     "github.com/stackprune/errors_test.wrapError",
+			funcName:     "github.com/stackprune/errors/v2_test.wrapError",
 		},
 		{
 			baseFileName: "error_test.go",
-			funcName:     "github.com/stackprune/errors_test.TestError_Stacks",
+			funcName:     "github.com/stackprune/errors/v2_test.TestError_Stacks",
 		},
 	}
 

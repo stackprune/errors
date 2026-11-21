@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stackprune/errors"
+	"github.com/stackprune/errors/v2"
 	"github.com/stretchr/testify/assert"
 )
 

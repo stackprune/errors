@@ -3,7 +3,7 @@ package errors_test
 import (
 	"fmt"
 
-	"github.com/stackprune/errors"
+	"github.com/stackprune/errors/v2"
 )
 
 // wrapError creates a wrapped error for testing purposes.

@@ -5,12 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0] - 2026-11-21
+
+### Changed
+- **Breaking:** Change the Go module and import path to `github.com/stackprune/errors/v2`. The package name remains `errors`.
+- **Breaking:** Unify `Error` and `JoinError` slog output with top-level `message`, `kind`, `stack`, and `children` fields. Emit only the first non-empty stack at the top level; child entries no longer include stacks, and leaves include `children: []`. The former `errors` field is renamed to `children` throughout the logged tree.
+- Preserve joined error grouping through wraps and standard multi-error unwraps without adding wrapper levels. Resolve each entry's kind through single-error unwraps. Original error values, stacks, and plain formatting are unchanged.
 
 ### Fixed
 - Evaluate each wrapped error's message once per `Error()` call, avoiding exponential calls to the underlying error when wrapping repeatedly.
 - Preserve wrapper context and all nested error messages in `JoinError`'s `%+v` output while printing only the first stack trace.
 - Synchronize stack cache access to avoid data races when calling `Stacks`, formatting, logging, or wrapping the same error concurrently.
+
+### Documentation
+- Refresh runnable slog and debug output examples, document the v1-to-v2 migration, and correct stack capture and single-error Join descriptions.
 
 ## [1.2.0] - 2026-11-16
 
