@@ -25,20 +25,23 @@ func (e *Error) Cause() error {
 }
 
 // Error returns the error message with wrapped messages joined by ": ".
+// The wrapped error's message is evaluated once per call.
 func (e *Error) Error() string {
 	if e.err == nil {
 		return e.message
 	}
 
+	causeMessage := e.err.Error()
+
 	if e.message == "" {
-		return e.err.Error()
+		return causeMessage
 	}
 
-	if e.err.Error() == "" {
+	if causeMessage == "" {
 		return e.message
 	}
 
-	return fmt.Sprintf("%s: %s", e.message, e.err.Error())
+	return e.message + ": " + causeMessage
 }
 
 // Format implements fmt.Formatter. Use %+v for full stack trace.

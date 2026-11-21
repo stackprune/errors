@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stackprune/errors"
@@ -54,6 +55,32 @@ func TestError_Error(t *testing.T) {
 
 			got := tt.err.Error()
 			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestError_Error_CauseEvaluatedOnce(t *testing.T) {
+	t.Parallel()
+
+	for _, depth := range []int{1, 12} {
+		t.Run(fmt.Sprintf("%d wraps", depth), func(t *testing.T) {
+			t.Parallel()
+
+			cause := &countingError{message: "root"}
+
+			var err error = cause
+
+			for range depth {
+				err = errors.Wrap(err, "wrapped")
+			}
+
+			want := strings.Repeat("wrapped: ", depth) + "root"
+
+			assert.Equal(t, want, err.Error())
+			assert.Equal(t, 1, cause.calls)
+
+			assert.Equal(t, want, err.Error())
+			assert.Equal(t, 2, cause.calls)
 		})
 	}
 }
@@ -137,6 +164,17 @@ func TestError_Format(t *testing.T) {
 			}
 		})
 	}
+}
+
+type countingError struct {
+	message string
+	calls   int
+}
+
+func (e *countingError) Error() string {
+	e.calls++
+
+	return e.message
 }
 
 func TestError_Stacks(t *testing.T) {
